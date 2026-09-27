@@ -6,7 +6,7 @@
  * src/platforms/<platform>/.
  */
 
-export type SupportedPlatform = "claude";
+export type SupportedPlatform = "claude" | "chatgpt" | "codex" | "gemini";
 
 /**
  * Explicit session states. Deliberately NOT a boolean `isRunning` flag —
@@ -120,12 +120,32 @@ export interface ActionResponse {
   ok: boolean;
 }
 
+/**
+ * Recognizes the domains RelayCTX knows about, whether or not that
+ * platform's adapter has real detection logic implemented yet (see
+ * `implemented` on PlatformAdapter). Codex Web lives under chatgpt.com's
+ * /codex path, sharing a host with regular ChatGPT, so it's checked
+ * before the general chatgpt.com case.
+ */
 export function isSupportedPlatformUrl(url: string): SupportedPlatform | null {
   try {
-    const { hostname } = new URL(url);
+    const { hostname, pathname } = new URL(url);
+
     if (hostname === "claude.ai" || hostname.endsWith(".claude.ai")) {
       return "claude";
     }
+
+    if (hostname === "chatgpt.com" || hostname.endsWith(".chatgpt.com")) {
+      return pathname.startsWith("/codex") ? "codex" : "chatgpt";
+    }
+    if (hostname === "chat.openai.com" || hostname.endsWith(".chat.openai.com")) {
+      return "chatgpt";
+    }
+
+    if (hostname === "gemini.google.com" || hostname.endsWith(".gemini.google.com")) {
+      return "gemini";
+    }
+
     return null;
   } catch {
     return null;

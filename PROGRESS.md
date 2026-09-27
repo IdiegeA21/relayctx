@@ -5,6 +5,17 @@ Tracking against the phased development order in `PRODUCT_SPEC.md`
 
 ## ✅ Done
 
+- **v2 design pass**: glassmorphism UI — frosted glass panels, gradient-
+  mesh backdrop, a proper three-font system (Space Grotesk / Inter /
+  JetBrains Mono, self-hosted, WOFF2/Latin-only), and bigger, more legible
+  type sizes throughout, replacing the flat dark v1 theme.
+- **Multi-platform scaffolding**: `SupportedPlatform` now covers Claude,
+  ChatGPT, Codex, and Gemini with real domain detection. Three stub
+  adapters (`src/platforms/stub-adapter.ts` + one file each under
+  `chatgpt/`, `codex/`, `gemini/`) are registered and safely do nothing —
+  a user can add one of those tabs today and see it in the Watch List
+  with a clear "detection coming soon" status and a disabled auto-continue
+  toggle, but nothing is ever automated on them.
 - **Phase 1 — Extension Skeleton**: Manifest V3, React + TypeScript +
   Vite popup, background service worker, content script, Chrome
   messaging wired end to end.
@@ -63,12 +74,18 @@ until Phase 8 has been run against the real product.
 
 ## Suggested next session
 
-1. Load `dist/` as an unpacked extension and add a real Claude tab to the
+1. **Turn a stub adapter into a real one.** Pick ChatGPT, Codex, or
+   Gemini, follow the checklist at the top of `src/platforms/stub-adapter.ts`,
+   and mirror the Claude adapter's file shape (`<platform>.selectors.ts`,
+   `.detector.ts`, `.actions.ts`, `.parser.ts`, `.adapter.ts`). Update
+   `PLATFORM_IMPLEMENTED` in `src/popup/platform-meta.ts` once it's live
+   so the popup stops showing "detection coming soon" for it.
+2. Load `dist/` as an unpacked extension and add a real Claude tab to the
    Watch List.
-2. Open the browser console for that tab and watch the `[RelayCTX]` logs
+3. Open the browser console for that tab and watch the `[RelayCTX]` logs
    as you trigger an output-limit response, to see what the detector
    actually reports.
-3. Adjust `claude.selectors.ts` phrase lists / `claude.detector.ts`
+4. Adjust `claude.selectors.ts` phrase lists / `claude.detector.ts`
    structural checks based on what you see — that's the one file+one
    file pairing meant to absorb Claude UI changes without touching
    anything else.

@@ -8,8 +8,8 @@ export default function EmptyState() {
       </div>
       <p className="empty-state__title">No active sessions</p>
       <p className="empty-state__body">
-        Nothing is being watched yet. Open a Claude conversation and add its tab to the Watch
-        List to keep it moving.
+        Nothing is being watched yet. Open a Claude, ChatGPT, Codex, or Gemini conversation and
+        add its tab to the Watch List to keep it moving.
       </p>
     </div>
   );

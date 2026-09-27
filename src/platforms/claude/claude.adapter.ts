@@ -12,6 +12,8 @@ import { parseResetTime } from "./claude.parser";
 
 class ClaudeAdapter implements PlatformAdapter {
   platform: SupportedPlatform = "claude";
+  displayName = "Claude";
+  implemented = true;
 
   canHandle(url: string): boolean {
     try {

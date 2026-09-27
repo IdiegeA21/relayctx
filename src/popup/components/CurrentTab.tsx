@@ -1,6 +1,7 @@
-import { ClaudeGlyph, CheckIcon } from "../icons";
+import { CheckIcon } from "../icons";
 import type { SupportedPlatform } from "../../core/types";
 import { shortenUrl } from "../../utils/url";
+import { PLATFORM_COLOR_VAR, PLATFORM_IMPLEMENTED, PLATFORM_LABEL, PLATFORM_MONOGRAM } from "../platform-meta";
 
 interface Props {
   loading: boolean;
@@ -10,10 +11,6 @@ interface Props {
   onAdd: () => void;
   adding: boolean;
 }
-
-const PLATFORM_LABEL: Record<SupportedPlatform, string> = {
-  claude: "Claude",
-};
 
 export default function CurrentTab({ loading, url, platform, alreadyWatched, onAdd, adding }: Props) {
   return (
@@ -29,8 +26,8 @@ export default function CurrentTab({ loading, url, platform, alreadyWatched, onA
       ) : platform && url ? (
         <>
           <div className="current-tab">
-            <div className="current-tab__icon">
-              <ClaudeGlyph />
+            <div className="current-tab__icon" style={{ color: PLATFORM_COLOR_VAR[platform] }}>
+              {PLATFORM_MONOGRAM[platform]}
             </div>
             <div className="current-tab__info">
               <span className="current-tab__platform">{PLATFORM_LABEL[platform]}</span>
@@ -49,6 +46,13 @@ export default function CurrentTab({ loading, url, platform, alreadyWatched, onA
               <CheckIcon /> Already on your Watch List
             </p>
           )}
+          {!PLATFORM_IMPLEMENTED[platform] && (
+            <p className="unsupported-note">
+              Detection isn't implemented for {PLATFORM_LABEL[platform]} yet — you can add the
+              tab, but RelayCTX won't automate it until that adapter is built. Claude is fully
+              supported today.
+            </p>
+          )}
         </>
       ) : (
         <div className="current-tab">
@@ -61,7 +65,7 @@ export default function CurrentTab({ loading, url, platform, alreadyWatched, onA
 
       {!loading && !platform && (
         <p className="unsupported-note">
-          Open a Claude conversation, then come back here to watch it.
+          Open a Claude, ChatGPT, Codex, or Gemini conversation, then come back here to watch it.
         </p>
       )}
     </section>

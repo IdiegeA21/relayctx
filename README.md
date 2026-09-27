@@ -47,6 +47,37 @@ wasn't explicitly added. Conversation content is never read into
 storage or sent anywhere — RelayCTX only inspects the DOM locally, in the
 tab's own browser context, to determine session state.
 
+## Design
+
+The popup is a glassmorphism UI: frosted, translucent panels floating over
+a soft gradient-mesh background, with a three-font system chosen for
+actual legibility at popup scale rather than defaulting to the browser
+stack:
+
+- **Space Grotesk** — brand wordmark and card/section titles
+- **Inter** — body copy, buttons, everything conversational
+- **JetBrains Mono** — state labels, URLs, countdowns, anything "data"
+
+All three are self-hosted (`@fontsource`, WOFF2/Latin-only — see
+`src/popup/fonts.css`), so the popup never depends on network access to
+render correctly, and the extension stays lean (~600KB total).
+
+Each watched session keeps the "signal lamp" motif from v1: a glowing
+left-edge rail whose color and motion encode state (amber pulsing while
+generating, teal while waiting, red on error, green on completion).
+
+## Multi-platform readiness
+
+`SupportedPlatform` already covers Claude, ChatGPT, Codex, and Gemini.
+Claude has a fully working adapter; the other three are registered with
+**real domain matching** (so a user can already add one of those tabs to
+the Watch List and see it listed) but **stubbed detection** — see
+`src/platforms/stub-adapter.ts` for exactly what a real implementation
+needs to replace, following the Claude adapter as the template. The popup
+clearly marks these as "detection coming soon" and disables the
+auto-continue toggle for them, so nothing is ever automated on an
+unverified platform.
+
 ## Project structure
 
 ```
@@ -58,9 +89,14 @@ relayctx/
 │   ├── content/                Content script: DOM observation + safe, gated actions
 │   ├── platforms/
 │   │   ├── platform.interface.ts   Generic adapter contract
-│   │   └── claude/             All Claude-specific DOM knowledge lives here
+│   │   ├── stub-adapter.ts     Factory for unimplemented-platform stubs
+│   │   ├── registry.ts         Registers all adapters (Claude + 3 stubs)
+│   │   ├── claude/             Fully implemented — all Claude DOM knowledge
+│   │   ├── chatgpt/            Stub — real domain match, no detection yet
+│   │   ├── codex/              Stub — real domain match, no detection yet
+│   │   └── gemini/             Stub — real domain match, no detection yet
 │   ├── core/                   Platform-agnostic types, storage, state machine, automation engine
-│   ├── popup/                  React popup UI
+│   ├── popup/                  React popup UI (glassmorphism design, see below)
 │   └── utils/
 ├── scripts/
 │   ├── build-extension.mjs     Bundles background/content with esbuild, copies manifest + icons

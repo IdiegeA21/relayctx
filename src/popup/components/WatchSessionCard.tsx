@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { SessionState, type WatchSession } from "../../core/types";
 import { formatCountdown, shortenUrl } from "../../utils/url";
+import { PLATFORM_COLOR_VAR, PLATFORM_IMPLEMENTED, PLATFORM_LABEL, PLATFORM_MONOGRAM } from "../platform-meta";
 
 interface Props {
   session: WatchSession;
@@ -16,9 +17,11 @@ type Variant =
   | "completed"
   | "error"
   | "paused"
-  | "unknown";
+  | "unknown"
+  | "unsupported";
 
-function variantFor(session: WatchSession): Variant {
+function variantFor(session: WatchSession, implemented: boolean): Variant {
+  if (!implemented) return "unsupported";
   if (session.status === "paused") return "paused";
   switch (session.lastDetectedState) {
     case SessionState.GENERATING:
@@ -39,8 +42,9 @@ function variantFor(session: WatchSession): Variant {
   }
 }
 
-function statusLabel(session: WatchSession, now: number): string {
-  if (session.status === "paused") return "Session paused — left Claude";
+function statusLabel(session: WatchSession, implemented: boolean, now: number): string {
+  if (!implemented) return "○ Detection coming soon";
+  if (session.status === "paused") return `Session paused — left ${PLATFORM_LABEL[session.platform]}`;
 
   switch (session.lastDetectedState) {
     case SessionState.GENERATING:
@@ -69,7 +73,8 @@ function statusLabel(session: WatchSession, now: number): string {
 
 export default function WatchSessionCard({ session, onStop, onOpen, onToggleAutomation }: Props) {
   const [now, setNow] = useState(Date.now());
-  const variant = variantFor(session);
+  const implemented = PLATFORM_IMPLEMENTED[session.platform];
+  const variant = variantFor(session, implemented);
   const isWaiting = session.lastDetectedState === SessionState.WAITING_FOR_RESET;
 
   useEffect(() => {
@@ -81,15 +86,30 @@ export default function WatchSessionCard({ session, onStop, onOpen, onToggleAuto
   return (
     <div className={`session-card session-card--${variant}`}>
       <div className="session-card__body">
-        <span className="session-card__title">{session.title ?? "Claude conversation"}</span>
-        <span className="session-card__status">{statusLabel(session, now)}</span>
+        <div className="session-card__heading">
+          <span
+            className="session-card__icon"
+            style={{ color: PLATFORM_COLOR_VAR[session.platform] }}
+          >
+            {PLATFORM_MONOGRAM[session.platform]}
+          </span>
+          <span className="session-card__title">{session.title ?? "Untitled conversation"}</span>
+        </div>
 
-        {session.lastDetectedState === SessionState.ERROR && session.lastError && (
+        <span className="session-card__status">{statusLabel(session, implemented, now)}</span>
+
+        {implemented && session.lastDetectedState === SessionState.ERROR && session.lastError && (
           <span className="session-card__error">{session.lastError}</span>
         )}
 
-        {session.status !== "paused" && session.lastDetectedState !== SessionState.ERROR && (
+        {implemented && session.status !== "paused" && session.lastDetectedState !== SessionState.ERROR && (
           <span className="session-card__meta">{shortenUrl(session.url, 34)}</span>
+        )}
+
+        {!implemented && (
+          <span className="session-card__meta">
+            {PLATFORM_LABEL[session.platform]} adapter not built yet — nothing is automated here.
+          </span>
         )}
 
         <div className="toggle-row">
@@ -97,7 +117,8 @@ export default function WatchSessionCard({ session, onStop, onOpen, onToggleAuto
           <label className="switch">
             <input
               type="checkbox"
-              checked={session.automationEnabled}
+              checked={implemented && session.automationEnabled}
+              disabled={!implemented}
               onChange={(e) => onToggleAutomation(session.tabId, e.target.checked)}
               aria-label="Toggle automatic continuation for this session"
             />

@@ -5,18 +5,29 @@
  * platform-specific DOM details. All of that knowledge lives inside each
  * adapter (e.g. src/platforms/claude/).
  *
- * MVP ships only the Claude adapter. `detectOutputLimit`,
- * `detectUsageLimit`, `findContinuationControl`, `continueGeneration`,
- * `sendContinuationMessage`, and `detectResetTime` are part of the
- * interface now so the automation engine (Phases 4+) can be built against
- * a stable contract, but the Claude adapter's MVP implementation focuses
- * on safe, read-only detection first per the "prove detection before
- * automating" development strategy.
+ * MVP ships a fully working Claude adapter plus three registered but
+ * unimplemented stubs (ChatGPT, Codex, Gemini) — see
+ * src/platforms/registry.ts. Their `canHandle` correctly recognizes the
+ * real domains, so a user can already add one of those tabs to the Watch
+ * List, but `implemented` is false and every detect method safely
+ * reports "unknown" until someone fills in that adapter's selectors the
+ * same way claude.selectors.ts / claude.detector.ts do. The automation
+ * engine and popup both check `implemented` before doing anything with a
+ * session, so a stub adapter can never trigger automation or mislead the
+ * user into thinking detection is live.
  */
 import type { DetectionResult, SupportedPlatform } from "../core/types";
 
 export interface PlatformAdapter {
   platform: SupportedPlatform;
+
+  /** Human-readable name for UI display (e.g. "ChatGPT", "Codex"). */
+  displayName: string;
+
+  /** False for stub adapters — detection/automation are not implemented
+   * yet, even though `canHandle` may already recognize the platform's
+   * domain. The popup and automation engine both gate on this. */
+  implemented: boolean;
 
   /** Does this adapter know how to handle the given page URL? */
   canHandle(url: string): boolean;
